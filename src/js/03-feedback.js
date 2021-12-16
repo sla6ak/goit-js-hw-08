@@ -5,8 +5,15 @@ const refs = {
   emaile: document.querySelector('.feedback-form input'),
   message: document.querySelector('.feedback-form textarea'),
 };
+
+// создадим объект данных для полей ввода
+const FORMA = {
+  name: 'forma',
+  inputSave: { emaile: '', message: '' },
+};
+
 // тут мы загружаем значения из хранилища если в нем что-то есть
-if (localStorage.getItem('emaile') || localStorage.getItem('message')) {
+if (localStorage.getItem('forma')) {
   loader();
 }
 
@@ -17,30 +24,36 @@ refs.form.addEventListener('submit', onSendSabmit);
 function onSaveInput(e) {
   //   используем делегирование событий чтоб выполнять все одной функцией
   if (e.target.nodeName === 'INPUT') {
-    localStorage.setItem('emaile', JSON.stringify(e.target.value));
+    FORMA.inputSave.emaile = `${e.target.value}`;
+    // сдесь был баг после перезагрузки страницы если значение не вызывалось оно не перезаписывалось
+    // при многократной загрузке очищало поле
+    FORMA.inputSave.message = JSON.parse(localStorage.getItem(FORMA.name)).message;
+    localStorage.setItem(FORMA.name, JSON.stringify(FORMA.inputSave));
   } else if (e.target.nodeName === 'TEXTAREA') {
-    localStorage.setItem('message', JSON.stringify(e.target.value));
+    FORMA.inputSave.message = `${e.target.value}`;
+    // сдесь был баг после перезагрузки страницы если значение не вызывалось оно не перезаписывалось
+    // при многократной загрузке очищало поле
+    FORMA.inputSave.emaile = JSON.parse(localStorage.getItem(FORMA.name)).emaile;
+    localStorage.setItem(FORMA.name, JSON.stringify(FORMA.inputSave));
   }
 }
 
 function onSendSabmit(e) {
   //   откажемся от перезагрузки и отправим JSON сами
   e.preventDefault();
-  // иммитируем отправку формы выводом в консоль
-  const send = {
-    emaile: JSON.parse(localStorage.getItem('emaile')),
-    message: JSON.parse(localStorage.getItem('message')),
-  };
-  console.log(JSON.stringify(send));
+
+  // иммитируем отправку формы на сервер в виде JSON выводом в консоль
+  console.log(JSON.stringify(FORMA));
+
   // очистим поля ввода
   e.currentTarget.reset();
+
   // очистим хранилище
-  localStorage.removeItem('emaile');
-  localStorage.removeItem('message');
+  localStorage.removeItem(FORMA.name);
 }
 
 function loader() {
   //   вернем значения из хранилища ведь форма не отправлена
-  refs.emaile.value = JSON.parse(localStorage.getItem('emaile'));
-  refs.message.value = JSON.parse(localStorage.getItem('message'));
+  refs.emaile.value = JSON.parse(localStorage.getItem(FORMA.name)).emaile;
+  refs.message.value = JSON.parse(localStorage.getItem(FORMA.name)).message;
 }
